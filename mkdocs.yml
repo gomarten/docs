@@ -1,0 +1,146 @@
+site_name: Marten
+site_description: The Go web framework you reach for when you want nothing in the way
+site_url: https://gomarten.github.io/marten
+repo_url: https://github.com/gomarten/marten
+repo_name: gomarten/marten
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+  logo: assets/logo.png
+  favicon: assets/favicon.ico
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: gomarten
+      repo: marten
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/gomarten/marten
+  generator: false
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - getting-started/index.md
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+    - Project Structure: getting-started/structure.md
+  - Guide:
+    - guide/index.md
+    - Routing: guide/routing.md
+    - Context: guide/context.md
+    - Middleware: guide/middleware.md
+    - Route Groups: guide/groups.md
+    - Error Handling: guide/errors.md
+    - Testing: guide/testing.md
+  - Middleware:
+    - middleware/index.md
+    - Logger: middleware/logger.md
+    - Recover: middleware/recover.md
+    - CORS: middleware/cors.md
+    - Rate Limit: middleware/ratelimit.md
+    - Basic Auth: middleware/basicauth.md
+    - Timeout: middleware/timeout.md
+    - Security: middleware/secure.md
+    - Body Limit: middleware/bodylimit.md
+    - Compression: middleware/compress.md
+    - ETag: middleware/etag.md
+    - Request ID: middleware/requestid.md
+    - No Cache: middleware/nocache.md
+  - Examples:
+    - examples/index.md
+    - REST API: examples/rest-api.md
+    - Authentication: examples/authentication.md
+    - File Server: examples/file-server.md
+    - Microservices: examples/microservices.md
+  - API Reference:
+    - api/index.md
+    - App: api/app.md
+    - Context: api/context.md
+    - Router: api/router.md
+    - Middleware: api/middleware.md
+  - Philosophy: philosophy.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md

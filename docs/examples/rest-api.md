@@ -1,0 +1,225 @@
+# REST API Example
+
+A complete CRUD API with validation, error handling, and proper HTTP semantics.
+
+## Full Example
+
+```go
+package main
+
+import (
+    "log"
+    "sync"
+    "time"
+
+    "github.com/gomarten/marten/marten"
+    "github.com/gomarten/marten/marten/middleware"
+)
+
+type User struct {
+    ID        string    `json:"id"`
+    Name      string    `json:"name"`
+    Email     string    `json:"email"`
+    CreatedAt time.Time `json:"created_at"`
+}
+
+var (
+    users   = make(map[string]User)
+    usersMu sync.RWMutex
+    nextID  = 1
+)
+
+func main() {
+    app := marten.New()
+
+    // Global middleware
+    app.Use(
+        middleware.RequestID,
+        middleware.Logger,
+        middleware.Recover,
+        middleware.CORS(middleware.DefaultCORSConfig()),
+    )
+
+    // Health check
+    app.GET("/health", func(c *marten.Ctx) error {
+        return c.OK(marten.M{"status": "healthy"})
+    })
+
+    // API routes
+    api := app.Group("/api/v1")
+    api.GET("/users", listUsers)
+    api.GET("/users/:id", getUser)
+    api.POST("/users", createUser)
+    api.PUT("/users/:id", updateUser)
+    api.DELETE("/users/:id", deleteUser)
+
+    log.Println("API running on http://localhost:3000")
+    app.RunGraceful(":3000", 10*time.Second)
+}
+```
+
+## Handlers
+
+### List Users
+
+```go
+func listUsers(c *marten.Ctx) error {
+    usersMu.RLock()
+    defer usersMu.RUnlock()
+
+    list := make([]User, 0, len(users))
+    for _, u := range users {
+        list = append(list, u)
+    }
+
+    return c.OK(marten.M{
+        "users": list,
+        "total": len(list),
+    })
+}
+```
+
+### Get User
+
+```go
+func getUser(c *marten.Ctx) error {
+    id := c.Param("id")
+
+    usersMu.RLock()
+    user, exists := users[id]
+    usersMu.RUnlock()
+
+    if !exists {
+        return c.NotFound("user not found")
+    }
+
+    return c.OK(user)
+}
+```
+
+### Create User with Validation
+
+```go
+func createUser(c *marten.Ctx) error {
+    var input struct {
+        Name  string `json:"name"`
+        Email string `json:"email"`
+    }
+
+    if err := c.BindValid(&input, func() error {
+        if input.Name == "" {
+            return &marten.BindError{Message: "name is required"}
+        }
+        if input.Email == "" {
+            return &marten.BindError{Message: "email is required"}
+        }
+        return nil
+    }); err != nil {
+        return c.BadRequest(err.Error())
+    }
+
+    usersMu.Lock()
+    id := fmt.Sprintf("%d", nextID)
+    nextID++
+    user := User{
+        ID:        id,
+        Name:      input.Name,
+        Email:     input.Email,
+        CreatedAt: time.Now(),
+    }
+    users[id] = user
+    usersMu.Unlock()
+
+    return c.Created(user)
+}
+```
+
+### Update User
+
+```go
+func updateUser(c *marten.Ctx) error {
+    id := c.Param("id")
+
+    usersMu.RLock()
+    user, exists := users[id]
+    usersMu.RUnlock()
+
+    if !exists {
+        return c.NotFound("user not found")
+    }
+
+    var input struct {
+        Name  string `json:"name"`
+        Email string `json:"email"`
+    }
+
+    if err := c.Bind(&input); err != nil {
+        return c.BadRequest(err.Error())
+    }
+
+    if input.Name != "" {
+        user.Name = input.Name
+    }
+    if input.Email != "" {
+        user.Email = input.Email
+    }
+
+    usersMu.Lock()
+    users[id] = user
+    usersMu.Unlock()
+
+    return c.OK(user)
+}
+```
+
+### Delete User
+
+```go
+func deleteUser(c *marten.Ctx) error {
+    id := c.Param("id")
+
+    usersMu.Lock()
+    _, exists := users[id]
+    if exists {
+        delete(users, id)
+    }
+    usersMu.Unlock()
+
+    if !exists {
+        return c.NotFound("user not found")
+    }
+
+    return c.NoContent()
+}
+```
+
+## Testing the API
+
+```bash
+# Create user
+curl -X POST http://localhost:3000/api/v1/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John","email":"john@example.com"}'
+
+# List users
+curl http://localhost:3000/api/v1/users
+
+# Get user
+curl http://localhost:3000/api/v1/users/1
+
+# Update user
+curl -X PUT http://localhost:3000/api/v1/users/1 \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John Doe"}'
+
+# Delete user
+curl -X DELETE http://localhost:3000/api/v1/users/1
+```
+
+## Key Patterns
+
+- Use `c.OK()`, `c.Created()`, `c.NoContent()` for success responses
+- Use `c.BadRequest()`, `c.NotFound()` for error responses
+- Use `c.BindValid()` for validation
+- Use `c.Param()` for path parameters
+- Use route groups for API versioning
