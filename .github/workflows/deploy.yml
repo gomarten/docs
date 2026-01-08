@@ -1,0 +1,36 @@
+name: Deploy MkDocs
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout the repo
+      - uses: actions/checkout@v4
+
+      # Step 2: Setup Python
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+
+      # Step 3: Install all required Python packages
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install \
+            mkdocs-material \
+            mkdocs-minify-plugin \
+            pymdown-extensions \
+            markdown \
+            pygments
+
+      # Step 4: Build and deploy the site
+      - name: Deploy MkDocs to GitHub Pages
+        run: mkdocs gh-deploy --force
