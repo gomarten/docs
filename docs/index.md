@@ -46,7 +46,7 @@
 ```go
 package main
 
-import "github.com/gomarten/marten/marten"
+import "github.com/gomarten/marten"
 
 func main() {
     app := marten.New()

@@ -84,8 +84,8 @@ package main
 
 import (
     "time"
-    "github.com/gomarten/marten/marten"
-    "github.com/gomarten/marten/marten/middleware"
+    "github.com/gomarten/marten"
+    "github.com/gomarten/marten/middleware"
 )
 
 func main() {
