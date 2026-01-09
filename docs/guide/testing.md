@@ -13,7 +13,7 @@ import (
     "net/http/httptest"
     "testing"
     
-    "github.com/gomarten/marten/marten"
+    "github.com/gomarten/marten"
 )
 
 func TestHelloWorld(t *testing.T) {

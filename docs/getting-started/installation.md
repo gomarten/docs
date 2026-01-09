@@ -22,7 +22,7 @@ package main
 
 import (
     "fmt"
-    "github.com/gomarten/marten/marten"
+    "github.com/gomarten/marten"
 )
 
 func main() {
@@ -43,10 +43,10 @@ go run main.go
 
 ```go
 // Core framework
-import "github.com/gomarten/marten/marten"
+import "github.com/gomarten/marten"
 
 // Built-in middleware
-import "github.com/gomarten/marten/marten/middleware"
+import "github.com/gomarten/marten/middleware"
 ```
 
 ## Version Pinning

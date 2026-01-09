@@ -4,9 +4,32 @@ Enforces a maximum duration for request handling.
 
 ## Usage
 
+### Basic Usage
+
 ```go
 app.Use(middleware.Timeout(30 * time.Second))
 ```
+
+### With Configuration
+
+```go
+app.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+    Timeout: 30 * time.Second,
+    OnTimeout: func(c *marten.Ctx) error {
+        return c.JSON(504, marten.M{
+            "error": "request took too long",
+            "path":  c.Path(),
+        })
+    },
+}))
+```
+
+## Configuration
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `Timeout` | `time.Duration` | Maximum request duration |
+| `OnTimeout` | `func(*Ctx) error` | Custom timeout handler |
 
 ## Behavior
 
@@ -34,6 +57,20 @@ slow := app.Group("/slow")
 slow.Use(middleware.Timeout(5 * time.Minute))
 ```
 
+### Custom Timeout Response
+
+```go
+app.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+    Timeout: 10 * time.Second,
+    OnTimeout: func(c *marten.Ctx) error {
+        return c.JSON(504, marten.M{
+            "error":   "timeout",
+            "message": "The request took too long to process",
+        })
+    },
+}))
+```
+
 ## Response
 
 When timeout occurs:
@@ -47,11 +84,10 @@ Content-Type: application/json
 
 ## Checking Context Cancellation
 
-Handlers should check for context cancellation:
+Handlers should check for context cancellation in long operations:
 
 ```go
 func slowHandler(c *marten.Ctx) error {
-    // Long operation
     result, err := longOperation(c.Context())
     if err != nil {
         if c.Context().Err() == context.DeadlineExceeded {

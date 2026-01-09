@@ -1,5 +1,9 @@
 # Marten
 
+<p align="center">
+  <img src="assets/logo.png" alt="Marten" width="300">
+</p>
+
 <div align="center" style="margin-bottom: 2rem;">
   <h2 style="margin-bottom: 0.5rem;">The framework you reach for when you want nothing in the way.</h2>
   <p style="color: #666; font-size: 1.1rem;">Fast. Simple. Elegant. Zero dependencies.</p>
@@ -27,7 +31,7 @@
 
     ---
 
-    12 built-in middleware for logging, auth, CORS, rate limiting, compression, and more.
+    13 built-in middleware for logging, auth, CORS, rate limiting, compression, and more.
 
     [:octicons-arrow-right-24: Middleware](middleware/index.md)
 
@@ -46,7 +50,7 @@
 ```go
 package main
 
-import "github.com/gomarten/marten/marten"
+import "github.com/gomarten/marten"
 
 func main() {
     app := marten.New()

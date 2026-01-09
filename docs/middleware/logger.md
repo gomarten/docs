@@ -4,32 +4,49 @@ Logs HTTP requests with method, path, status code, and duration.
 
 ## Usage
 
+### Basic Usage
+
 ```go
 app.Use(middleware.Logger)
 ```
 
+### With Configuration
+
+```go
+app.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+    Output: os.Stdout,
+    Skip: func(c *marten.Ctx) bool {
+        return c.Path() == "/health"
+    },
+}))
+```
+
+## Configuration
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `Output` | `io.Writer` | Where to write logs (default: os.Stdout) |
+| `Format` | `func(...)` | Custom format function |
+| `Skip` | `func(*Ctx) bool` | Skip logging for certain requests |
+
 ## Output
 
 ```
-2024/01/15 10:30:00 GET /users 200 1.234ms
-2024/01/15 10:30:01 POST /users 201 5.678ms
-2024/01/15 10:30:02 GET /users/999 404 0.456ms
+GET /users 200 1.234ms 192.168.1.1
+POST /users 201 5.678ms 192.168.1.1
+GET /users/999 404 0.456ms 192.168.1.1
 ```
 
-## Log Format
+## Examples
 
-```
-<timestamp> <method> <path> <status> <duration>
-```
-
-## Example
+### Basic Logger
 
 ```go
 package main
 
 import (
-    "github.com/gomarten/marten/marten"
-    "github.com/gomarten/marten/marten/middleware"
+    "github.com/gomarten/marten"
+    "github.com/gomarten/marten/middleware"
 )
 
 func main() {
@@ -45,9 +62,45 @@ func main() {
 }
 ```
 
-## Custom Logger
+### Skip Health Checks
 
-For custom logging, create your own middleware:
+```go
+app.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+    Skip: func(c *marten.Ctx) bool {
+        return c.Path() == "/health" || c.Path() == "/ready"
+    },
+}))
+```
+
+### Custom Output
+
+```go
+logFile, _ := os.OpenFile("access.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
+app.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+    Output: logFile,
+}))
+```
+
+### Custom Format
+
+```go
+app.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+    Format: func(method, path string, status int, duration time.Duration, clientIP string) string {
+        return fmt.Sprintf("[%s] %s %s %d %v\n",
+            time.Now().Format(time.RFC3339),
+            method,
+            path,
+            status,
+            duration,
+        )
+    },
+}))
+```
+
+## Custom Logger Middleware
+
+For more control, create your own middleware:
 
 ```go
 func CustomLogger(next marten.Handler) marten.Handler {

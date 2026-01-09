@@ -4,11 +4,25 @@ Limits the number of requests per client within a time window.
 
 ## Usage
 
+### Basic Usage
+
 ```go
 app.Use(middleware.RateLimit(middleware.RateLimitConfig{
     Requests: 100,
     Window:   time.Minute,
 }))
+```
+
+### With Cleanup (Recommended)
+
+```go
+rl := middleware.NewRateLimiter(middleware.RateLimitConfig{
+    Requests: 100,
+    Window:   time.Minute,
+})
+defer rl.Stop() // Clean up goroutine on shutdown
+
+app.Use(rl.Middleware())
 ```
 
 ## Configuration
@@ -18,6 +32,18 @@ app.Use(middleware.RateLimit(middleware.RateLimitConfig{
 | `Requests` | `int` | Max requests per window |
 | `Window` | `time.Duration` | Time window |
 | `KeyFunc` | `func(*Ctx) string` | Function to identify clients |
+| `Skip` | `func(*Ctx) bool` | Skip rate limiting for certain requests |
+
+## Response Headers
+
+The middleware sets these headers on every response:
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Maximum requests allowed |
+| `X-RateLimit-Remaining` | Requests remaining in window |
+| `X-RateLimit-Reset` | Unix timestamp when window resets |
+| `Retry-After` | Seconds until retry (when limited) |
 
 ## Default Behavior
 
@@ -58,6 +84,22 @@ app.Use(middleware.RateLimit(middleware.RateLimitConfig{
 }))
 ```
 
+### Skip Certain Requests
+
+```go
+rl := middleware.NewRateLimiter(middleware.RateLimitConfig{
+    Requests: 100,
+    Window:   time.Minute,
+    Skip: func(c *marten.Ctx) bool {
+        // Skip health checks
+        return c.Path() == "/health"
+    },
+})
+defer rl.Stop()
+
+app.Use(rl.Middleware())
+```
+
 ### Rate Limit by User
 
 ```go
@@ -80,6 +122,10 @@ When rate limit is exceeded:
 ```
 HTTP/1.1 429 Too Many Requests
 Content-Type: application/json
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1704067200
+Retry-After: 45
 
 {"error": "rate limit exceeded"}
 ```
@@ -88,25 +134,32 @@ Content-Type: application/json
 
 ```go
 // Strict limit for auth endpoints
-auth := app.Group("/auth")
-auth.Use(middleware.RateLimit(middleware.RateLimitConfig{
+authRL := middleware.NewRateLimiter(middleware.RateLimitConfig{
     Requests: 5,
     Window:   time.Minute,
-}))
+})
+defer authRL.Stop()
+
+auth := app.Group("/auth")
+auth.Use(authRL.Middleware())
 auth.POST("/login", login)
 
 // Relaxed limit for API
-api := app.Group("/api")
-api.Use(middleware.RateLimit(middleware.RateLimitConfig{
+apiRL := middleware.NewRateLimiter(middleware.RateLimitConfig{
     Requests: 100,
     Window:   time.Minute,
-}))
+})
+defer apiRL.Stop()
+
+api := app.Group("/api")
+api.Use(apiRL.Middleware())
 api.GET("/users", listUsers)
 ```
 
 ## Best Practices
 
-1. **Set appropriate limits** - Too strict frustrates users, too relaxed allows abuse
-2. **Use different limits** for different endpoints
-3. **Consider authenticated vs anonymous** users
-4. **Monitor rate limit hits** to adjust limits
+1. **Use `NewRateLimiter`** with `Stop()` for proper cleanup
+2. **Set appropriate limits** - Too strict frustrates users, too relaxed allows abuse
+3. **Use different limits** for different endpoints
+4. **Consider authenticated vs anonymous** users
+5. **Monitor rate limit hits** to adjust limits

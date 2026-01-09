@@ -44,8 +44,8 @@ import (
     "myapp/handlers"
     "myapp/middleware"
     
-    "github.com/gomarten/marten/marten"
-    mw "github.com/gomarten/marten/marten/middleware"
+    "github.com/gomarten/marten"
+    mw "github.com/gomarten/marten/middleware"
 )
 
 func main() {
@@ -75,7 +75,7 @@ func main() {
 ```go
 package handlers
 
-import "github.com/gomarten/marten/marten"
+import "github.com/gomarten/marten"
 
 func ListUsers(c *marten.Ctx) error {
     // ...
@@ -139,8 +139,8 @@ import (
     "myapp/internal/handlers/posts"
     "myapp/internal/middleware"
     
-    "github.com/gomarten/marten/marten"
-    mw "github.com/gomarten/marten/marten/middleware"
+    "github.com/gomarten/marten"
+    mw "github.com/gomarten/marten/middleware"
 )
 
 func New() *marten.App {
@@ -169,7 +169,7 @@ package users
 
 import (
     "myapp/internal/middleware"
-    "github.com/gomarten/marten/marten"
+    "github.com/gomarten/marten"
 )
 
 func RegisterRoutes(app *marten.App) {

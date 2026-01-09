@@ -14,6 +14,7 @@ Default allows:
 - All origins (`*`)
 - Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS
 - Headers: Origin, Content-Type, Accept, Authorization
+- Max age: 24 hours
 
 ### Custom Configuration
 
@@ -22,7 +23,9 @@ app.Use(middleware.CORS(middleware.CORSConfig{
     AllowOrigins:     []string{"https://example.com", "https://app.example.com"},
     AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
     AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+    ExposeHeaders:    []string{"X-Request-ID", "X-Custom-Header"},
     AllowCredentials: true,
+    MaxAge:           3600, // 1 hour
 }))
 ```
 
@@ -33,7 +36,9 @@ app.Use(middleware.CORS(middleware.CORSConfig{
 | `AllowOrigins` | `[]string` | Allowed origins. Use `*` for all. |
 | `AllowMethods` | `[]string` | Allowed HTTP methods |
 | `AllowHeaders` | `[]string` | Allowed request headers |
+| `ExposeHeaders` | `[]string` | Headers exposed to the client |
 | `AllowCredentials` | `bool` | Allow credentials (cookies, auth) |
+| `MaxAge` | `int` | Preflight cache duration in seconds |
 
 ## Examples
 
@@ -70,6 +75,15 @@ app.Use(middleware.CORS(middleware.CORSConfig{
 }))
 ```
 
+### Expose Custom Headers
+
+```go
+app.Use(middleware.CORS(middleware.CORSConfig{
+    AllowOrigins:  []string{"*"},
+    ExposeHeaders: []string{"X-Request-ID", "X-RateLimit-Remaining"},
+}))
+```
+
 !!! warning "Credentials and Wildcards"
     `AllowCredentials: true` cannot be used with `AllowOrigins: []string{"*"}`. This is a security restriction enforced by browsers.
 
@@ -87,6 +101,8 @@ HTTP/1.1 204 No Content
 Access-Control-Allow-Origin: https://app.example.com
 Access-Control-Allow-Methods: GET, POST, PUT, DELETE
 Access-Control-Allow-Headers: Origin, Content-Type, Authorization
+Access-Control-Max-Age: 86400
+Vary: Origin
 ```
 
 ## Response Headers
@@ -98,7 +114,10 @@ The middleware sets these headers:
 | `Access-Control-Allow-Origin` | Allowed origin |
 | `Access-Control-Allow-Methods` | Allowed methods |
 | `Access-Control-Allow-Headers` | Allowed headers |
+| `Access-Control-Expose-Headers` | Headers exposed to client |
 | `Access-Control-Allow-Credentials` | If credentials allowed |
+| `Access-Control-Max-Age` | Preflight cache duration |
+| `Vary` | Set to `Origin` for proper caching |
 
 ## Security Considerations
 

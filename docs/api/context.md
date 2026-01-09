@@ -25,6 +25,24 @@ c.Created(v any) error      // 201
 c.Text(code int, text string) error
 ```
 
+### HTML Response
+
+```go
+c.HTML(code int, html string) error
+```
+
+### Binary Response
+
+```go
+c.Blob(code int, contentType string, data []byte) error
+```
+
+### Stream Response
+
+```go
+c.Stream(code int, contentType string, r io.Reader) error
+```
+
 ### No Content
 
 ```go
@@ -47,6 +65,8 @@ c.ServerError(message string) error   // 500
 c.Status(code int) *Ctx
 c.StatusCode() int
 c.Header(key, value string) *Ctx
+c.GetHeader(key string) string
+c.Written() bool
 c.Redirect(code int, url string) error
 ```
 
@@ -69,6 +89,7 @@ c.QueryInt64(name string) int64
 c.QueryBool(name string) bool
 c.QueryDefault(name, def string) string
 c.QueryValues(name string) []string
+c.QueryParams() url.Values
 ```
 
 ### Body Binding
@@ -127,6 +148,30 @@ func getUser(c *marten.Ctx) error {
         return c.NotFound("user not found")
     }
     return c.OK(user)
+}
+```
+
+### Streaming Response
+
+```go
+func downloadFile(c *marten.Ctx) error {
+    file, err := os.Open("large-file.zip")
+    if err != nil {
+        return c.NotFound("file not found")
+    }
+    defer file.Close()
+    
+    c.Header("Content-Disposition", "attachment; filename=file.zip")
+    return c.Stream(200, "application/octet-stream", file)
+}
+```
+
+### HTML Response
+
+```go
+func homePage(c *marten.Ctx) error {
+    html := "<html><body><h1>Welcome</h1></body></html>"
+    return c.HTML(200, html)
 }
 ```
 

@@ -18,7 +18,18 @@ Or use the generic `Handle` method:
 
 ```go
 app.Handle("GET", "/users", listUsers)
-app.Handle("OPTIONS", "/users", optionsUsers)
+```
+
+All HTTP methods are supported:
+
+```go
+app.GET("/resource", handler)
+app.POST("/resource", handler)
+app.PUT("/resource", handler)
+app.DELETE("/resource", handler)
+app.PATCH("/resource", handler)
+app.HEAD("/resource", handler)
+app.OPTIONS("/resource", handler)
 ```
 
 ## Path Parameters
@@ -185,6 +196,43 @@ app.NotFound(func(c *marten.Ctx) error {
         "path":  c.Path(),
     })
 })
+```
+
+## 405 Method Not Allowed
+
+When a path exists but the HTTP method doesn't match, Marten returns 405:
+
+```go
+app.GET("/users", listUsers)
+app.POST("/users", createUser)
+
+// DELETE /users returns:
+// HTTP/1.1 405 Method Not Allowed
+// Allow: GET, POST
+```
+
+## Trailing Slash Handling
+
+Configure how trailing slashes are handled:
+
+```go
+// Ignore (default) - /users and /users/ match the same route
+app.SetTrailingSlash(marten.TrailingSlashIgnore)
+
+// Redirect - /users/ redirects to /users with 301
+app.SetTrailingSlash(marten.TrailingSlashRedirect)
+
+// Strict - /users and /users/ are different routes
+app.SetTrailingSlash(marten.TrailingSlashStrict)
+```
+
+## Route Conflict Detection
+
+Marten detects conflicting parameter routes at registration:
+
+```go
+app.GET("/users/:id", getUser)
+app.GET("/users/:name", getUserByName) // Panics!
 ```
 
 ## Query Parameters

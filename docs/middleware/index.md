@@ -23,8 +23,8 @@ Marten includes 12 production-ready middleware components.
 
 ```go
 import (
-    "github.com/gomarten/marten/marten"
-    "github.com/gomarten/marten/marten/middleware"
+    "github.com/gomarten/marten"
+    "github.com/gomarten/marten/middleware"
 )
 
 func main() {
