@@ -136,13 +136,17 @@ That's it. No boilerplate. No configuration files. Just code.
 
 ## Performance
 
-Marten is designed for speed without sacrificing simplicity.
+Marten performs on par with Gin and Echo while maintaining zero dependencies.
 
-| Benchmark | Operations/sec | Allocations |
-|-----------|---------------|-------------|
-| Static Route | ~500,000 | 11 allocs/op |
-| Param Route | ~480,000 | 11 allocs/op |
-| JSON Response | ~350,000 | 14 allocs/op |
+| Benchmark | Marten | Gin | Echo | Chi |
+|-----------|--------|-----|------|-----|
+| Static Route | 1464 ns/op | 1336 ns/op | 1436 ns/op | 2202 ns/op |
+| Param Route | 1564 ns/op | 1418 ns/op | 1472 ns/op | 2559 ns/op |
+| JSON Response | 1755 ns/op | 2050 ns/op | 1835 ns/op | 1868 ns/op |
+
+*Benchmarks run on Intel Xeon Platinum 8259CL @ 2.50GHz, Go 1.24*
+
+[:octicons-arrow-right-24: Full benchmark results](benchmarks.md)
 
 !!! tip "Context Pooling"
     Marten uses `sync.Pool` to reuse context objects, minimizing garbage collection pressure under high load.
