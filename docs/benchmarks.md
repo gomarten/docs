@@ -76,14 +76,6 @@ GET request to `/users/:userId/posts/:postId/comments/:commentId`.
 | Chi | 2869 | 1688 | 14 |
 | Fiber | 28778 | 10343 | 29 |
 
-## Key Takeaways
-
-1. **Marten performs on par with Gin and Echo** across all benchmark categories
-2. **Zero dependencies** means smaller binary size and faster compilation
-3. **Standard net/http compatibility** ensures broad ecosystem support
-4. **Chi** is slightly slower due to context-based parameter storage
-5. **Fiber** benchmarks show overhead from `app.Test()` method (not representative of real Fasthttp performance)
-
 ## Run Your Own
 
 ```bash
