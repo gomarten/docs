@@ -142,5 +142,6 @@ nav:
     - Router: api/router.md
     - Middleware: api/middleware.md
   - Philosophy: philosophy.md
+  - Benchmarks: benchmarks.md
   - Contributing: contributing.md
   - Changelog: changelog.md
