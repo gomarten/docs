@@ -77,6 +77,37 @@ app.NotFound(func(c *marten.Ctx) error {
 })
 ```
 
+### OnStart
+
+Register a callback to run when the server starts.
+
+```go
+func (a *App) OnStart(fn func())
+```
+
+```go
+app.OnStart(func() {
+    log.Println("Server starting...")
+    // Initialize connections, warm caches, etc.
+})
+```
+
+### OnShutdown
+
+Register a callback to run when the server shuts down gracefully.
+
+```go
+func (a *App) OnShutdown(fn func())
+```
+
+```go
+app.OnShutdown(func() {
+    log.Println("Server shutting down...")
+    // Close database connections, flush buffers, etc.
+    db.Close()
+})
+```
+
 ### Group
 
 Create a route group.

@@ -65,6 +65,20 @@ app.Use(middleware.CORS(middleware.CORSConfig{
 }))
 ```
 
+### Wildcard Subdomains
+
+```go
+app.Use(middleware.CORS(middleware.CORSConfig{
+    AllowOrigins: []string{"*.example.com"},
+    AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
+}))
+```
+
+This allows:
+- `https://api.example.com`
+- `https://app.example.com`
+- `https://sub.api.example.com`
+
 ### With Credentials
 
 ```go

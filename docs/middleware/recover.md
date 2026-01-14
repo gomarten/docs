@@ -4,9 +4,38 @@ Catches panics and returns a 500 Internal Server Error instead of crashing the s
 
 ## Usage
 
+### Basic Usage
+
 ```go
 app.Use(middleware.Recover)
 ```
+
+### With Configuration
+
+```go
+app.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
+    LogPanics: true,
+    OnPanic: func(c *marten.Ctx, err any) error {
+        return c.JSON(500, marten.M{
+            "error": "internal error",
+            "request_id": c.RequestID(),
+        })
+    },
+}))
+```
+
+### JSON Error Response
+
+```go
+app.Use(middleware.RecoverJSON)
+```
+
+## Configuration
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `LogPanics` | `bool` | Log panics to stdout (default: true) |
+| `OnPanic` | `func(*Ctx, any) error` | Custom panic handler |
 
 ## Behavior
 
@@ -53,12 +82,40 @@ Internal Server Error
 ## Log Output
 
 ```
-2024/01/15 10:30:00 panic recovered: something went wrong!
+2026/01/13 10:30:00 panic recovered: something went wrong!
 ```
 
 ## Custom Recovery
 
-For custom panic handling:
+### With Custom Handler
+
+```go
+app.Use(middleware.RecoverWithHandler(func(c *marten.Ctx, err any) error {
+    // Log with stack trace
+    log.Printf("panic: %v\n%s", err, debug.Stack())
+    
+    // Custom response
+    return c.JSON(500, marten.M{
+        "error":      "internal error",
+        "request_id": c.RequestID(),
+    })
+}))
+```
+
+### JSON Response
+
+```go
+app.Use(middleware.RecoverJSON)
+```
+
+Returns:
+```json
+{"error": "internal server error", "message": "panic message here"}
+```
+
+### Full Custom Recovery
+
+For more control, create your own middleware:
 
 ```go
 func CustomRecover(next marten.Handler) marten.Handler {

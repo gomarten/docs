@@ -33,6 +33,7 @@ app.Use(rl.Middleware())
 | `Window` | `time.Duration` | Time window |
 | `KeyFunc` | `func(*Ctx) string` | Function to identify clients |
 | `Skip` | `func(*Ctx) bool` | Skip rate limiting for certain requests |
+| `OnLimitReached` | `func(*Ctx) error` | Custom response when limit exceeded |
 
 ## Response Headers
 
@@ -113,6 +114,25 @@ api.Use(middleware.RateLimit(middleware.RateLimitConfig{
         return c.GetString("user_id")
     },
 }))
+```
+
+### Custom Rate Limit Response
+
+```go
+rl := middleware.NewRateLimiter(middleware.RateLimitConfig{
+    Requests: 100,
+    Window:   time.Minute,
+    OnLimitReached: func(c *marten.Ctx) error {
+        return c.JSON(429, marten.M{
+            "error":   "rate_limit_exceeded",
+            "message": "Please slow down and try again later",
+            "retry_after": c.Writer.Header().Get("Retry-After"),
+        })
+    },
+})
+defer rl.Stop()
+
+app.Use(rl.Middleware())
 ```
 
 ## Response

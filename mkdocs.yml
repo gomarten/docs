@@ -40,7 +40,7 @@ theme:
   icon:
     repo: fontawesome/brands/github
   logo: assets/logo.png
-  favicon: assets/favicon.ico
+  favicon: assets/rocket.svg
 
 plugins:
   - search

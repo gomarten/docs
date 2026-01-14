@@ -99,6 +99,12 @@ c.Bind(v any) error
 c.BindValid(v any, validate func() error) error
 ```
 
+`Bind()` supports multiple content types:
+
+- `application/json` - JSON body
+- `application/x-www-form-urlencoded` - Form data
+- `multipart/form-data` - Multipart form data
+
 ### Form & Files
 
 ```go

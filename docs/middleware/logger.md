@@ -28,6 +28,8 @@ app.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 | `Output` | `io.Writer` | Where to write logs (default: os.Stdout) |
 | `Format` | `func(...)` | Custom format function |
 | `Skip` | `func(*Ctx) bool` | Skip logging for certain requests |
+| `EnableColors` | `bool` | Enable colored output (default: false) |
+| `JSONFormat` | `bool` | Output logs in JSON format (default: false) |
 
 ## Output
 
@@ -96,6 +98,36 @@ app.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
         )
     },
 }))
+```
+
+### Colored Output
+
+```go
+app.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+    EnableColors: true,
+}))
+```
+
+Output with ANSI colors:
+- GET requests in blue
+- POST requests in green
+- PUT requests in yellow
+- DELETE requests in red
+- 2xx status in green
+- 4xx status in yellow
+- 5xx status in red
+
+### JSON Format
+
+```go
+app.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+    JSONFormat: true,
+}))
+```
+
+Output:
+```json
+{"time":"2026-01-14T10:30:00Z","method":"GET","path":"/users","status":200,"duration":"1.234ms","client_ip":"192.168.1.1"}
 ```
 
 ## Custom Logger Middleware
