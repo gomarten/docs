@@ -18,6 +18,7 @@ Create `main.go`:
 package main
 
 import (
+    "fmt"
     "log"
     "sync"
     "time"
@@ -183,12 +184,6 @@ func deleteUser(c *marten.Ctx) error {
 }
 ```
 
-Add the missing import:
-
-```go
-import "fmt"
-```
-
 ## Run the Server
 
 ```bash
@@ -229,7 +224,7 @@ go run main.go
           "id": "1",
           "name": "Alice",
           "email": "alice@example.com",
-          "created_at": "2024-01-15T10:30:00Z"
+          "created_at": "2026-01-15T10:30:00Z"
         }
       ],
       "total": 1

@@ -198,7 +198,7 @@ func ErrorHandler(next marten.Handler) marten.Handler {
 
 ## Built-in Middleware
 
-Marten includes 12 production-ready middleware:
+Marten includes 14 production-ready middleware:
 
 | Middleware | Purpose |
 |------------|---------|
@@ -213,6 +213,7 @@ Marten includes 12 production-ready middleware:
 | [Compress](../middleware/compress.md) | Gzip compression |
 | [ETag](../middleware/etag.md) | Response caching |
 | [RequestID](../middleware/requestid.md) | Request tracking |
+| [Static](../middleware/static.md) | Static file serving |
 | [NoCache](../middleware/logger.md) | Cache prevention |
 
 See [Middleware Reference](../middleware/index.md) for details.

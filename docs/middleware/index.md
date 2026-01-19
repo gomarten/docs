@@ -1,6 +1,6 @@
 # Middleware Reference
 
-Marten includes 12 production-ready middleware components.
+Marten includes 14 production-ready middleware components.
 
 ## Overview
 
@@ -17,6 +17,7 @@ Marten includes 12 production-ready middleware components.
 | [Compress](compress.md) | Gzip compression | `middleware.Compress(cfg)` |
 | [ETag](etag.md) | Response caching | `middleware.ETag` |
 | [RequestID](requestid.md) | Request tracking | `middleware.RequestID` |
+| [Static](static.md) | Static file serving | `middleware.Static(root)` |
 | NoCache | Cache prevention | `middleware.NoCache` |
 
 ## Quick Start

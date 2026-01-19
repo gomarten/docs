@@ -23,6 +23,7 @@ type Middleware func(Handler) Handler
 | `Compress` | Gzip compression |
 | `ETag` | Automatic ETag caching |
 | `RequestID` | Request ID tracking |
+| `Static` | Static file serving |
 | `NoCache` | Cache prevention |
 
 ## Quick Usage
@@ -36,11 +37,19 @@ app.Use(middleware.RequestID)
 app.Use(middleware.ETag)
 app.Use(middleware.NoCache)
 app.Use(middleware.Compress)
+app.Use(middleware.Static("./public"))
 ```
 
 ### Configurable Middleware
 
 ```go
+// Static files
+app.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+    Root:   "./public",
+    Prefix: "/static",
+    MaxAge: 3600,
+}))
+
 // CORS
 app.Use(middleware.CORS(middleware.CORSConfig{
     AllowOrigins: []string{"https://example.com"},
