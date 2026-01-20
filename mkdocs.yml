@@ -100,10 +100,13 @@ extra:
     property: G-XXXXXXXXXX
 
 copyright: >
-  Copyright &copy; 2025 Marten Contributors - 
-  <a href="https://github.com/gomarten/marten/blob/main/LICENSE">MIT License</a> - 
-  Made with ❤️ for the Go community - 
-  Built with <a href="https://squidfunk.github.io/mkdocs-material/">MkDocs Material</a>
+  Copyright &copy; 2026 <a href="https://github.com/gomarten/marten">Marten Contributors</a>
+  <br>
+  Licensed under the <a href="https://github.com/gomarten/marten/blob/main/LICENSE">MIT License</a>
+  &nbsp;·&nbsp;
+  Built with <a href="https://squidfunk.github.io/mkdocs-material/">Material for MkDocs</a>
+  &nbsp;·&nbsp;
+  Made with ❤️ for the Go community
 
 extra_css:
   - stylesheets/extra.css
