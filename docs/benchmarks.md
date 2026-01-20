@@ -145,7 +145,7 @@ Catch-all routes `/files/*filepath`.
 
 ### Parallel Requests
 
-Concurrent request handling (simulated).
+Concurrent request handling.
 
 | Framework | ns/op | B/op | allocs/op | Relative |
 |-----------|-------|------|-----------|----------|
@@ -217,19 +217,6 @@ In practice, you'll be limited by:
 
 Marten delivers **88% of Gin's performance** with **0 dependencies**.
 
-**Benefits:**
-- No dependency management
-- Smaller binaries (~2MB vs ~8MB)
-- Faster builds
-- Easier to audit
-- No breaking changes from dependencies
-
-**Trade-off:**
-- 8-18% slower than Gin/Echo
-- Smaller ecosystem
-- Fewer third-party integrations
-
-
 ## Running Benchmarks
 
 ### Quick Start
@@ -299,5 +286,3 @@ Marten delivers **competitive performance** with **zero dependencies**.
 For most applications, the 8-18% performance difference compared to Gin is negligible when network and database latency dominate request time.
 
 ---
-
-**Source Code**: [github.com/gomarten/marten/benchmarks](https://github.com/gomarten/marten/tree/main/benchmarks)
