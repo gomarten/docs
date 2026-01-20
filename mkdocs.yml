@@ -95,9 +95,7 @@ extra:
     - icon: fontawesome/solid/comments
       link: https://github.com/gomarten/marten/discussions
   generator: false
-  analytics:
-    provider: google
-    property: G-XXXXXXXXXX
+
 
 copyright: >
   Copyright &copy; 2026 <a href="https://github.com/gomarten/marten">Marten Contributors</a>
@@ -106,7 +104,7 @@ copyright: >
   &nbsp;·&nbsp;
   Built with <a href="https://squidfunk.github.io/mkdocs-material/">Material for MkDocs</a>
   &nbsp;·&nbsp;
-  Made with ❤️ for the Go community
+  Made with <span style="color: #00ADD8;">❤️</span> for the Go community
 
 extra_css:
   - stylesheets/extra.css
