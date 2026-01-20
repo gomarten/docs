@@ -121,6 +121,7 @@ nav:
     - Recover: middleware/recover.md
     - CORS: middleware/cors.md
     - Rate Limit: middleware/ratelimit.md
+    - Static: middleware/static.md
     - Basic Auth: middleware/basicauth.md
     - Timeout: middleware/timeout.md
     - Security: middleware/secure.md
