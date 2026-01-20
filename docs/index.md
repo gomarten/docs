@@ -31,7 +31,7 @@
 
     ---
 
-    13 built-in middleware for logging, auth, CORS, rate limiting, compression, and more.
+    14 built-in middleware for logging, auth, CORS, rate limiting, compression, and more.
 
     [:octicons-arrow-right-24: Middleware](middleware/index.md)
 
