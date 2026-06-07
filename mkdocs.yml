@@ -132,6 +132,7 @@ nav:
     - Rate Limit: middleware/ratelimit.md
     - Static: middleware/static.md
     - Basic Auth: middleware/basicauth.md
+    - Health: middleware/health.md
     - Timeout: middleware/timeout.md
     - Security: middleware/secure.md
     - Body Limit: middleware/bodylimit.md

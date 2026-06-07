@@ -238,7 +238,6 @@ app.GET("/users/:name", getUserByName) // Panics!
 ## Query Parameters
 
 Query parameters are accessed via the context, not the router:
-
 ```go
 app.GET("/search", func(c *marten.Ctx) error {
     q := c.Query("q")
@@ -300,6 +299,21 @@ func registerUserRoutes(app *marten.App) {
     users.PUT("/:id", updateUser)
     users.DELETE("/:id", deleteUser)
 }
+```
+
+### 5. Debug with Routes()
+
+`app.Routes()` returns all registered routes sorted by path then method — useful for verifying your routing table:
+
+```go
+for _, r := range app.Routes() {
+    fmt.Printf("%-8s %s\n", r.Method, r.Path)
+}
+// DELETE   /api/v1/users/:id
+// GET      /
+// GET      /api/v1/users
+// GET      /api/v1/users/:id
+// POST     /api/v1/users
 ```
 
 ## Next Steps

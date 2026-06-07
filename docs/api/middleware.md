@@ -17,6 +17,7 @@ type Middleware func(Handler) Handler
 | `CORS` | Cross-origin resource sharing |
 | `RateLimit` | Request rate limiting |
 | `BasicAuth` | HTTP Basic authentication |
+| `Health` | Health check endpoint |
 | `Timeout` | Request timeout |
 | `Secure` | Security headers |
 | `BodyLimit` | Request body size limit |
@@ -36,50 +37,63 @@ app.Use(middleware.Recover)
 app.Use(middleware.RequestID)
 app.Use(middleware.ETag)
 app.Use(middleware.NoCache)
-app.Use(middleware.Compress)
+app.Use(middleware.Health("/health"))
 app.Use(middleware.Static("./public"))
 ```
 
 ### Configurable Middleware
 
 ```go
-// Static files
-app.Use(middleware.StaticWithConfig(middleware.StaticConfig{
-    Root:   "./public",
-    Prefix: "/static",
-    MaxAge: 3600,
+// Health check with custom response
+app.Use(middleware.HealthWithConfig(middleware.HealthConfig{
+    Path: "/healthz",
+    Handler: func(c *marten.Ctx) error {
+        return c.OK(marten.M{"status": "ok", "version": "1.0.0"})
+    },
 }))
 
 // CORS
 app.Use(middleware.CORS(middleware.CORSConfig{
     AllowOrigins: []string{"https://example.com"},
-    AllowMethods: []string{"GET", "POST"},
+    AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
+    AllowHeaders: []string{"Content-Type", "Authorization"},
 }))
 
 // Rate Limit
 app.Use(middleware.RateLimit(middleware.RateLimitConfig{
-    Max:    100,
-    Window: time.Minute,
+    Requests: 100,
+    Window:   time.Minute,
 }))
 
 // Basic Auth
-app.Use(middleware.BasicAuth(middleware.BasicAuthConfig{
-    Users: map[string]string{"admin": "secret"},
-}))
+app.Use(middleware.BasicAuthSimple("admin", "secret"))
 
 // Timeout
 app.Use(middleware.Timeout(5 * time.Second))
 
-// Secure
-app.Use(middleware.Secure(middleware.SecureConfig{
-    XSSProtection:      true,
-    HSTSMaxAge:         31536000,
-    ContentSecurityPolicy: "default-src 'self'",
+// Timeout with custom response
+app.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+    Timeout: 10 * time.Second,
+    OnTimeout: func(c *marten.Ctx) error {
+        return c.JSON(504, marten.E("request timed out"))
+    },
 }))
 
-// Body Limit
-app.Use(middleware.BodyLimit(middleware.BodyLimitConfig{
-    MaxSize: 10 * middleware.MB,
+// Secure headers
+app.Use(middleware.Secure(middleware.DefaultSecureConfig()))
+
+// Body limit
+app.Use(middleware.BodyLimit(10 * middleware.MB))
+
+// Compression
+app.Use(middleware.Compress(middleware.DefaultCompressConfig()))
+
+// Static files with config
+app.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+    Root:   "./public",
+    Prefix: "/static",
+    MaxAge: 3600,
+    Browse: false,
 }))
 ```
 
@@ -90,12 +104,12 @@ func MyMiddleware(next marten.Handler) marten.Handler {
     return func(c *marten.Ctx) error {
         // Before handler
         start := time.Now()
-        
+
         err := next(c)
-        
+
         // After handler
-        log.Printf("Request took %v", time.Since(start))
-        
+        log.Printf("%s %s — %v", c.Method(), c.Path(), time.Since(start))
+
         return err
     }
 }
@@ -106,15 +120,18 @@ func MyMiddleware(next marten.Handler) marten.Handler {
 Middleware executes in registration order:
 
 ```go
-app.Use(middleware.RequestID)  // 1st: adds request ID
-app.Use(middleware.Logger)     // 2nd: logs with request ID
-app.Use(middleware.Recover)    // 3rd: catches panics
+app.Use(middleware.Health("/health"))  // 1st: short-circuit probes
+app.Use(middleware.RequestID)          // 2nd: assign ID for tracking
+app.Use(middleware.Logger)             // 3rd: log with request ID
+app.Use(middleware.Recover)            // 4th: catch panics
 ```
 
 ## Chaining
 
+Compose middleware manually using `marten.Chain`:
+
 ```go
-handler := middleware.Chain(
+composed := marten.Chain(
     middleware.Logger,
     middleware.Recover,
 )(finalHandler)

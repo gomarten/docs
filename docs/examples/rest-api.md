@@ -34,16 +34,12 @@ func main() {
 
     // Global middleware
     app.Use(
+        middleware.Health("/health"),
         middleware.RequestID,
         middleware.Logger,
         middleware.Recover,
         middleware.CORS(middleware.DefaultCORSConfig()),
     )
-
-    // Health check
-    app.GET("/health", func(c *marten.Ctx) error {
-        return c.OK(marten.M{"status": "healthy"})
-    })
 
     // API routes
     api := app.Group("/api/v1")
@@ -218,8 +214,9 @@ curl -X DELETE http://localhost:3000/api/v1/users/1
 
 ## Key Patterns
 
-- Use `c.OK()`, `c.Created()`, `c.NoContent()` for success responses
+- Use `c.OK()`, `c.Created()`, `c.Accepted()`, `c.NoContent()` for success responses
 - Use `c.BadRequest()`, `c.NotFound()` for error responses
+- Use `middleware.Health()` for health check endpoints
 - Use `c.BindValid()` for validation
 - Use `c.Param()` for path parameters
 - Use route groups for API versioning

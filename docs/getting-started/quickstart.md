@@ -47,6 +47,7 @@ func main() {
 
     // Middleware
     app.Use(
+        middleware.Health("/health"),
         middleware.RequestID,
         middleware.Logger,
         middleware.Recover,
@@ -54,8 +55,6 @@ func main() {
     )
 
     // Routes
-    app.GET("/health", healthCheck)
-
     api := app.Group("/api/v1")
     {
         api.GET("/users", listUsers)
@@ -67,10 +66,6 @@ func main() {
 
     log.Println("Server running on http://localhost:3000")
     app.RunGraceful(":3000", 10*time.Second)
-}
-
-func healthCheck(c *marten.Ctx) error {
-    return c.OK(marten.M{"status": "healthy"})
 }
 
 func listUsers(c *marten.Ctx) error {
@@ -192,6 +187,17 @@ go run main.go
 
 ## Test the API
 
+=== "Health Check"
+
+    ```bash
+    curl http://localhost:3000/health
+    ```
+
+    Response:
+    ```json
+    {"status":"ok"}
+    ```
+
 === "Create User"
 
     ```bash
@@ -254,11 +260,11 @@ go run main.go
 ## What You've Learned
 
 - ✅ Creating a Marten application
-- ✅ Adding middleware
+- ✅ Adding middleware (including the health check shortcut)
 - ✅ Defining routes with groups
 - ✅ Path parameters
 - ✅ JSON binding and validation
-- ✅ Response helpers
+- ✅ Response helpers (`Created`, `OK`, `NotFound`, `NoContent`)
 - ✅ Graceful shutdown
 
 ## Next Steps

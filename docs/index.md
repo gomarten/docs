@@ -31,7 +31,7 @@
 
     ---
 
-    14 built-in middleware for logging, auth, CORS, rate limiting, compression, and more.
+    15 built-in middleware for logging, auth, CORS, rate limiting, compression, health checks, and more.
 
     [:octicons-arrow-right-24: Middleware](middleware/index.md)
 
@@ -93,15 +93,18 @@ That's it. No boilerplate. No configuration files. Just code.
         // Path params
         id := c.ParamInt("id")
         
-        // Query params
-        page := c.QueryInt("page")
+        // Query params — string, int, float, bool
+        page  := c.QueryInt("page")
+        price := c.QueryFloat64("price")
         
         // JSON binding
         var user User
         c.Bind(&user)
         
         // Response helpers
-        return c.OK(user)
+        return c.OK(user)       // 200
+        return c.Created(user)  // 201
+        return c.Accepted(job)  // 202
     }
     ```
 

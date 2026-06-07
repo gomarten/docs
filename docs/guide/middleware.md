@@ -198,7 +198,7 @@ func ErrorHandler(next marten.Handler) marten.Handler {
 
 ## Built-in Middleware
 
-Marten includes 14 production-ready middleware:
+Marten includes 15 production-ready middleware:
 
 | Middleware | Purpose |
 |------------|---------|
@@ -207,6 +207,7 @@ Marten includes 14 production-ready middleware:
 | [CORS](../middleware/cors.md) | Cross-origin requests |
 | [RateLimit](../middleware/ratelimit.md) | Rate limiting |
 | [BasicAuth](../middleware/basicauth.md) | Basic authentication |
+| [Health](../middleware/health.md) | Health check endpoint |
 | [Timeout](../middleware/timeout.md) | Request timeouts |
 | [Secure](../middleware/secure.md) | Security headers |
 | [BodyLimit](../middleware/bodylimit.md) | Request size limits |
@@ -214,7 +215,7 @@ Marten includes 14 production-ready middleware:
 | [ETag](../middleware/etag.md) | Response caching |
 | [RequestID](../middleware/requestid.md) | Request tracking |
 | [Static](../middleware/static.md) | Static file serving |
-| [NoCache](../middleware/logger.md) | Cache prevention |
+| [NoCache](../middleware/nocache.md) | Cache prevention |
 
 See [Middleware Reference](../middleware/index.md) for details.
 
@@ -303,6 +304,7 @@ Each middleware should do one thing:
 
 ```go
 // Good - single responsibility
+app.Use(middleware.Health("/health"))
 app.Use(middleware.Logger)
 app.Use(middleware.Recover)
 app.Use(middleware.CORS(cfg))
@@ -317,11 +319,12 @@ Put middleware in logical order:
 
 ```go
 app.Use(
-    middleware.RequestID,  // First: assign ID for tracking
-    middleware.Logger,     // Second: log with ID
-    middleware.Recover,    // Third: catch panics
-    middleware.RateLimit,  // Fourth: reject excess requests early
-    middleware.Auth,       // Fifth: authenticate
+    middleware.Health("/health"),  // First: answer probes before doing any work
+    middleware.RequestID,          // Second: assign ID for tracking
+    middleware.Logger,             // Third: log with ID
+    middleware.Recover,            // Fourth: catch panics
+    middleware.RateLimit,          // Fifth: reject excess requests early
+    middleware.Auth,               // Sixth: authenticate
 )
 ```
 

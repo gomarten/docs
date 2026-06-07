@@ -4,18 +4,25 @@ Patterns for building microservices with Marten.
 
 ## Health Checks
 
-```go
-app.GET("/health", func(c *marten.Ctx) error {
-    return c.OK(marten.M{"status": "healthy"})
-})
+Use `middleware.Health` for liveness probes — it answers before any other middleware runs, keeping probe latency minimal:
 
-app.GET("/ready", func(c *marten.Ctx) error {
-    // Check dependencies
-    if !dbConnected {
-        return c.ServerError("database not ready")
-    }
-    return c.OK(marten.M{"status": "ready"})
-})
+```go
+// Simple liveness
+app.Use(middleware.Health("/health"))
+
+// Readiness with dependency checks
+app.Use(middleware.HealthWithConfig(middleware.HealthConfig{
+    Path: "/ready",
+    Handler: func(c *marten.Ctx) error {
+        if err := db.Ping(); err != nil {
+            return c.JSON(503, marten.M{
+                "status": "unavailable",
+                "reason": "database unreachable",
+            })
+        }
+        return c.OK(marten.M{"status": "ok"})
+    },
+}))
 ```
 
 ## Request Tracing
@@ -24,14 +31,13 @@ app.GET("/ready", func(c *marten.Ctx) error {
 app.Use(middleware.RequestID)
 app.Use(middleware.Logger)
 
-// Access request ID in handlers
 func handler(c *marten.Ctx) error {
     id := c.RequestID()
     log.Printf("[%s] Processing request", id)
-    
-    // Pass to downstream services
+
+    // Propagate to downstream services
     // req.Header.Set("X-Request-ID", id)
-    
+
     return c.OK(marten.M{"request_id": id})
 }
 ```
@@ -41,10 +47,12 @@ func handler(c *marten.Ctx) error {
 ```go
 func main() {
     app := marten.New()
-    
-    // Setup routes...
-    
-    // Graceful shutdown with 10s timeout
+
+    app.OnShutdown(func() {
+        db.Close()
+        log.Println("connections closed")
+    })
+
     app.RunGraceful(":8080", 10*time.Second)
 }
 ```
@@ -53,8 +61,8 @@ func main() {
 
 ```go
 app.Use(middleware.RateLimit(middleware.RateLimitConfig{
-    Max:    100,
-    Window: time.Minute,
+    Requests: 100,
+    Window:   time.Minute,
 }))
 ```
 
@@ -70,7 +78,6 @@ app.Use(middleware.Timeout(5 * time.Second))
 myservice/
 ├── main.go
 ├── handlers/
-│   ├── health.go
 │   └── api.go
 ├── middleware/
 │   └── auth.go
@@ -83,7 +90,9 @@ myservice/
 package main
 
 import (
+    "log"
     "time"
+
     "github.com/gomarten/marten"
     "github.com/gomarten/marten/middleware"
 )
@@ -91,35 +100,65 @@ import (
 func main() {
     app := marten.New()
 
-    // Standard middleware stack
+    // Standard microservice middleware stack
     app.Use(
-        middleware.RequestID,
-        middleware.Logger,
-        middleware.Recover,
-        middleware.Timeout(5*time.Second),
+        middleware.Health("/health"),           // Answer probes first
+        middleware.RequestID,                   // Assign trace ID
+        middleware.Logger,                      // Log all requests
+        middleware.Recover,                     // Catch panics
+        middleware.Timeout(5*time.Second),      // Enforce SLA
         middleware.RateLimit(middleware.RateLimitConfig{
-            Max:    100,
-            Window: time.Minute,
+            Requests: 100,
+            Window:   time.Minute,
         }),
     )
 
-    // Health endpoints
-    app.GET("/health", healthHandler)
-    app.GET("/ready", readyHandler)
+    // Readiness probe with dependency check
+    app.Use(middleware.HealthWithConfig(middleware.HealthConfig{
+        Path: "/ready",
+        Handler: func(c *marten.Ctx) error {
+            if err := db.Ping(); err != nil {
+                return c.JSON(503, marten.M{"status": "unavailable"})
+            }
+            return c.OK(marten.M{"status": "ok"})
+        },
+    }))
 
     // API
     api := app.Group("/api/v1")
     api.GET("/resource", getResource)
     api.POST("/resource", createResource)
 
+    log.Println("Service running on :8080")
     app.RunGraceful(":8080", 10*time.Second)
+}
+```
+
+## Async Job Pattern
+
+Use `c.Accepted()` (202) when a request is queued for async processing:
+
+```go
+func enqueueJob(c *marten.Ctx) error {
+    var req JobRequest
+    if err := c.Bind(&req); err != nil {
+        return c.BadRequest(err.Error())
+    }
+
+    jobID := queue.Enqueue(req)
+
+    return c.Accepted(marten.M{
+        "job_id": jobID,
+        "status": "queued",
+    })
 }
 ```
 
 ## Key Patterns
 
-- Always include health/ready endpoints
-- Use request IDs for tracing
-- Implement graceful shutdown
-- Add rate limiting and timeouts
-- Use route groups for versioning
+- Use `middleware.Health` — not a manual route — so probes bypass rate limiting and logging
+- Use `middleware.Health` for liveness, `HealthWithConfig` for readiness (readiness can check dependencies)
+- Pass `c.Context()` to database and HTTP calls so timeouts cancel in-flight work
+- Use `c.Accepted()` for async job endpoints
+- Use `OnShutdown` to close connections cleanly
+- Use request IDs for distributed tracing

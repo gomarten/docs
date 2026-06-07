@@ -2,6 +2,9 @@
 
 Comprehensive performance comparison of Marten v0.1.3 against popular Go web frameworks.
 
+!!! note "Benchmarks reflect v0.1.3"
+    These results were recorded against v0.1.3. The v0.1.4 release focuses on bug fixes and new context helpers; routing and middleware performance is unchanged.
+
 ## Test Environment
 
 - **CPU**: Intel(R) Xeon(R) Platinum 8259CL @ 2.50GHz
@@ -14,7 +17,7 @@ Comprehensive performance comparison of Marten v0.1.3 against popular Go web fra
 
 | Framework | Version | Dependencies |
 |-----------|---------|--------------|
-| **Marten** | v0.1.3 | 0 (zero) |
+| **Marten** | v0.1.4 | 0 (zero) |
 | **Gin** | v1.9.1 | 9 direct |
 | **Echo** | v4.11.4 | 11 direct |
 | **Chi** | v5.0.11 | 0 (zero) |

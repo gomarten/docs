@@ -1,6 +1,6 @@
 # Middleware Reference
 
-Marten includes 14 production-ready middleware components.
+Marten includes 15 production-ready middleware components.
 
 ## Overview
 
@@ -11,6 +11,7 @@ Marten includes 14 production-ready middleware components.
 | [CORS](cors.md) | Cross-origin requests | `middleware.CORS(cfg)` |
 | [RateLimit](ratelimit.md) | Rate limiting | `middleware.RateLimit(cfg)` |
 | [BasicAuth](basicauth.md) | Basic authentication | `middleware.BasicAuth(cfg)` |
+| [Health](health.md) | Health check endpoint | `middleware.Health(path)` |
 | [Timeout](timeout.md) | Request timeouts | `middleware.Timeout(duration)` |
 | [Secure](secure.md) | Security headers | `middleware.Secure(cfg)` |
 | [BodyLimit](bodylimit.md) | Request size limits | `middleware.BodyLimit(size)` |
@@ -18,7 +19,7 @@ Marten includes 14 production-ready middleware components.
 | [ETag](etag.md) | Response caching | `middleware.ETag` |
 | [RequestID](requestid.md) | Request tracking | `middleware.RequestID` |
 | [Static](static.md) | Static file serving | `middleware.Static(root)` |
-| NoCache | Cache prevention | `middleware.NoCache` |
+| [NoCache](nocache.md) | Cache prevention | `middleware.NoCache` |
 
 ## Quick Start
 
@@ -30,17 +31,18 @@ import (
 
 func main() {
     app := marten.New()
-    
+
     // Recommended middleware stack
     app.Use(
-        middleware.RequestID,                           // Track requests
-        middleware.Logger,                              // Log requests
-        middleware.Recover,                             // Catch panics
+        middleware.Health("/health"),                        // Respond to probes immediately
+        middleware.RequestID,                               // Track requests
+        middleware.Logger,                                  // Log requests
+        middleware.Recover,                                 // Catch panics
         middleware.Secure(middleware.DefaultSecureConfig()), // Security headers
         middleware.CORS(middleware.DefaultCORSConfig()),     // CORS
-        middleware.BodyLimit(10 * middleware.MB),       // Limit body size
+        middleware.BodyLimit(10 * middleware.MB),            // Limit body size
     )
-    
+
     // ...
 }
 ```
@@ -49,15 +51,16 @@ func main() {
 
 ```go
 app.Use(
-    middleware.RequestID,  // 1. Assign ID first for tracking
-    middleware.Logger,     // 2. Log with request ID
-    middleware.Recover,    // 3. Catch panics
-    middleware.Secure,     // 4. Set security headers
-    middleware.CORS,       // 5. Handle CORS
-    middleware.RateLimit,  // 6. Reject excess requests early
-    middleware.BodyLimit,  // 7. Reject large requests early
-    middleware.Compress,   // 8. Compress responses
-    middleware.Timeout,    // 9. Enforce timeouts
+    middleware.Health("/health"), // 1. Short-circuit probes before any other work
+    middleware.RequestID,         // 2. Assign ID first for tracking
+    middleware.Logger,            // 3. Log with request ID
+    middleware.Recover,           // 4. Catch panics
+    middleware.Secure,            // 5. Set security headers
+    middleware.CORS,              // 6. Handle CORS
+    middleware.RateLimit,         // 7. Reject excess requests early
+    middleware.BodyLimit,         // 8. Reject large requests early
+    middleware.Compress,          // 9. Compress responses
+    middleware.Timeout,           // 10. Enforce timeouts
 )
 ```
 

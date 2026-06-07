@@ -151,6 +151,18 @@ for _, r := range routes {
 }
 ```
 
+Routes are returned sorted by path, then by method, for stable output. The root path appears as `"/"`.
+
+Example output:
+
+```
+DELETE /api/v1/users/:id
+GET    /api/v1/users
+GET    /api/v1/users/:id
+POST   /api/v1/users
+GET    /
+```
+
 ## Handler Type
 
 ```go

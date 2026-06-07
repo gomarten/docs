@@ -26,16 +26,23 @@ app.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 
 ## Configuration
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `Timeout` | `time.Duration` | Maximum request duration |
-| `OnTimeout` | `func(*Ctx) error` | Custom timeout handler |
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `Timeout` | `time.Duration` | — | Maximum request duration (required) |
+| `OnTimeout` | `func(*Ctx) error` | `504 {"error":"request timeout"}` | Custom timeout response handler |
 
 ## Behavior
 
-1. Starts a timer when request begins
-2. If handler completes in time, response is sent normally
-3. If timeout expires, returns 504 Gateway Timeout
+The handler always runs in its own goroutine. When the timeout fires:
+
+1. The middleware atomically claims the `ResponseWriter` — all subsequent writes from the handler goroutine are silently dropped (no panic, no error)
+2. The middleware waits for the handler goroutine to finish
+3. The timeout response is written on the original `ResponseWriter`
+
+This design is **data-race free**: the underlying `ResponseWriter` is never accessed from two goroutines simultaneously.
+
+!!! note "Handlers don't need to check ctx.Done()"
+    The timeout middleware suppresses handler writes automatically. Handlers that ignore context cancellation will complete normally — their response is just discarded. However, checking `c.Context().Done()` in long operations is still good practice to avoid wasted work.
 
 ## Examples
 
@@ -45,15 +52,15 @@ app.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 app.Use(middleware.Timeout(30 * time.Second))
 ```
 
-### Different Timeouts
+### Per-Group Timeouts
 
 ```go
-// Quick endpoints
+// Fast endpoints — strict 5s limit
 api := app.Group("/api")
 api.Use(middleware.Timeout(5 * time.Second))
 
-// Slow endpoints (file uploads, reports)
-slow := app.Group("/slow")
+// Slow endpoints — uploads, reports
+slow := app.Group("/exports")
 slow.Use(middleware.Timeout(5 * time.Minute))
 ```
 
@@ -64,54 +71,49 @@ app.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
     Timeout: 10 * time.Second,
     OnTimeout: func(c *marten.Ctx) error {
         return c.JSON(504, marten.M{
-            "error":   "timeout",
-            "message": "The request took too long to process",
+            "error":      "timeout",
+            "message":    "The request took too long. Please try again.",
+            "request_id": c.RequestID(),
         })
     },
 }))
 ```
 
-## Response
+### Cooperative Cancellation
 
-When timeout occurs:
+For long-running operations that benefit from early exit when the client disconnects or times out:
+
+```go
+func exportReport(c *marten.Ctx) error {
+    rows, err := db.QueryContext(c.Context(), "SELECT ...")
+    if err != nil {
+        if c.Context().Err() != nil {
+            // Query was cancelled by timeout — handler goroutine exits cleanly
+            return nil
+        }
+        return c.ServerError(err.Error())
+    }
+    defer rows.Close()
+
+    // ...
+    return c.OK(result)
+}
+```
+
+## Default Response
+
+When timeout fires:
 
 ```
 HTTP/1.1 504 Gateway Timeout
-Content-Type: application/json
+Content-Type: application/json; charset=utf-8
 
 {"error": "request timeout"}
 ```
 
-## Checking Context Cancellation
-
-Handlers should check for context cancellation in long operations:
-
-```go
-func slowHandler(c *marten.Ctx) error {
-    result, err := longOperation(c.Context())
-    if err != nil {
-        if c.Context().Err() == context.DeadlineExceeded {
-            return c.ServerError("operation timed out")
-        }
-        return c.ServerError(err.Error())
-    }
-    
-    return c.OK(result)
-}
-
-func longOperation(ctx context.Context) (string, error) {
-    select {
-    case <-time.After(10 * time.Second):
-        return "done", nil
-    case <-ctx.Done():
-        return "", ctx.Err()
-    }
-}
-```
-
 ## Best Practices
 
-1. **Set appropriate timeouts** - Too short causes failures, too long wastes resources
-2. **Check context in long operations** - Allows early termination
-3. **Use different timeouts** for different endpoints
-4. **Log timeouts** for monitoring
+1. **Set appropriate timeouts** — too short causes false failures, too long wastes resources
+2. **Use per-group timeouts** instead of one global value when endpoints have very different SLAs
+3. **Pass context to database/HTTP calls** — `db.QueryContext(c.Context(), ...)` so the database driver can cancel the query early
+4. **Log timeouts** — add `OnTimeout` to include the path and request ID for monitoring

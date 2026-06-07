@@ -148,12 +148,13 @@ func New() *marten.App {
     
     // Global middleware
     app.Use(
+        mw.Health("/health"),
         mw.RequestID,
         mw.Logger,
         mw.Recover,
         mw.CORS(mw.DefaultCORSConfig()),
     )
-    
+
     // Register routes
     users.RegisterRoutes(app)
     posts.RegisterRoutes(app)

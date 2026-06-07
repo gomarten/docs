@@ -30,28 +30,32 @@ app.GET("/users/:id/posts/:postId", func(c *marten.Ctx) error {
 app.GET("/search", func(c *marten.Ctx) error {
     // String
     q := c.Query("q")
-    
+
     // Integer
     page := c.QueryInt("page")
-    
+
     // Int64
     cursor := c.QueryInt64("cursor")
-    
+
+    // Float64 (e.g. price range, lat/lng)
+    maxPrice := c.QueryFloat64("max_price")
+
     // Boolean
     active := c.QueryBool("active")
-    
+
     // With default
     sort := c.QueryDefault("sort", "created_at")
-    
+
     // Multiple values (?tag=a&tag=b)
     tags := c.QueryValues("tag") // []string{"a", "b"}
-    
+
     return c.OK(marten.M{
-        "query":  q,
-        "page":   page,
-        "sort":   sort,
-        "tags":   tags,
-        "active": active,
+        "query":     q,
+        "page":      page,
+        "max_price": maxPrice,
+        "sort":      sort,
+        "tags":      tags,
+        "active":    active,
     })
 })
 ```
@@ -198,9 +202,10 @@ func createUser(c *marten.Ctx) error {
 c.JSON(200, data)
 
 // Success helpers
-c.OK(data)           // 200
-c.Created(data)      // 201
-c.NoContent()        // 204
+c.OK(data)        // 200
+c.Created(data)   // 201
+c.Accepted(data)  // 202 — async / queued jobs
+c.NoContent()     // 204
 
 // Error helpers
 c.BadRequest("message")    // 400
@@ -264,16 +269,19 @@ func AuthMiddleware(next marten.Handler) marten.Handler {
 func handler(c *marten.Ctx) error {
     // Get any type
     user := c.Get("user").(User)
-    
+
     // Get string
     userID := c.GetString("user_id")
-    
+
     // Get int
     count := c.GetInt("count")
-    
+
     // Get bool
     isAdmin := c.GetBool("is_admin")
-    
+
+    // Get float64
+    score := c.GetFloat64("trust_score")
+
     return c.OK(user)
 }
 ```
@@ -305,6 +313,26 @@ Quick error response:
 ```go
 // Returns {"error": "message"}
 c.JSON(400, marten.E("invalid input"))
+```
+
+## Async Operations
+
+Use `c.Accepted()` (202) when a request is queued for background processing rather than completed immediately:
+
+```go
+func enqueueReport(c *marten.Ctx) error {
+    var req ReportRequest
+    if err := c.Bind(&req); err != nil {
+        return c.BadRequest(err.Error())
+    }
+
+    jobID := worker.Enqueue(req)
+
+    return c.Accepted(marten.M{
+        "job_id": jobID,
+        "status": "queued",
+    })
+}
 ```
 
 ## Raw Access

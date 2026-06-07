@@ -2,6 +2,30 @@
 
 All notable changes to Marten.
 
+## [0.1.4] - 2026-06-07
+
+### Added
+
+- **`c.Accepted(v any) error`** — new 202 response helper for async/queued operations, completing the shorthand set alongside `OK()`, `Created()`, and `NoContent()`
+- **`c.QueryFloat64(name string) float64`** — typed float query parameter helper, consistent with `QueryInt`, `QueryInt64`, `QueryBool`
+- **`c.GetFloat64(key string) float64`** — typed float store getter, consistent with `GetInt`, `GetBool`, `GetString`
+- **`middleware.Health(path string)`** — zero-config health check endpoint; responds `200 {"status":"ok"}` and passes all other requests through. Useful for load balancer probes without registering a route
+- **`middleware.HealthWithConfig(cfg HealthConfig)`** — configurable variant with custom path and response handler
+- **`marten.NewCtx(w, r)`** — public constructor for creating a bare `*Ctx`; useful in custom middleware that needs an isolated context
+
+### Fixed
+
+- **Timeout data race** — `Timeout()` and `TimeoutWithConfig()` had a data race when a slow handler wrote to the `ResponseWriter` concurrently with the timeout path writing the 504 response. Fixed with a `timeoutWriter` wrapper that uses atomic ops to make the handler goroutine's writes no-ops once the timeout fires. The middleware now waits for the goroutine to exit before touching the underlying `ResponseWriter`, eliminating all concurrent access
+- **`Routes()` returned `""` for the root route** — the `"/"` route was reported as an empty string. `collectRoutes` now correctly emits `"/"` for the root node
+- **`Routes()` non-deterministic order** — map iteration over handler methods caused random ordering on repeated calls. Routes are now sorted by path then method for stable output
+- **`BodyLimit` returned 500 instead of 413 for chunked over-limit bodies** — when a handler read a chunked body past the limit (no `Content-Length`), the `bodyTooLargeError` propagated to `OnError` and produced a 500. `BodyLimit` now catches that error on the way back and responds 413 if the response has not yet been written
+
+### Improved
+
+- `Timeout()` delegates to `TimeoutWithConfig()` — single implementation, no duplicated logic
+- `collectRoutes` path building rewritten to handle root node and avoid double-slash in nested paths
+- 30 new test cases (355+ total), all passing with `-race`
+
 ## [0.1.3] - 2026-01-18
 
 ### Added

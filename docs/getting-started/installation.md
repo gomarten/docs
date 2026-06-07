@@ -54,7 +54,7 @@ import "github.com/gomarten/marten/middleware"
 For production, pin to a specific version in your `go.mod`:
 
 ```
-require github.com/gomarten/marten v0.1.0
+require github.com/gomarten/marten v0.1.4
 ```
 
 ## Updating
